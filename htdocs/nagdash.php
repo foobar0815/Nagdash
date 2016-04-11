@@ -99,13 +99,14 @@ list($host_summary, $service_summary, $down_hosts, $known_hosts, $known_services
 <?php
     foreach ($down_hosts as $host) {
         echo "<tr id='host_row' class='{$nagios_host_status_colour[$host['host_state']]}'>";
+        $blink_tag = ($enable_blinking) ? "<blink>" : "";
         $tag = NagdashHelpers::print_tag($host['tag'], count($nagios_hosts));
         echo "<td>{$host['hostname']} " . $tag . " <span class='controls'>";
         NagdashHelpers::render('controls.php',[ "tag" => $host['tag'],
                                             "host" => $host['hostname'],
                                             "service" => '']);
         echo "</span></td>";
-        echo "<td><blink>{$nagios_host_status[$host['host_state']]}</blink></td>";
+        echo "<td>${blink_tag}{$nagios_host_status[$host['host_state']]}</td>";
         echo "<td>{$host['duration']}</td>";
         echo "<td>{$host['current_attempt']}/{$host['max_check_attempts']}</td>";
         echo "<td class=\"desc\">{$host['detail']}</td>";
