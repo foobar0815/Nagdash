@@ -67,7 +67,11 @@ if (isset($mock_state_file)) {
     $state = $data['content'];
     $errors = [];
     $curl_stats = [];
-    $api_cols = [];
+    $api_cols = ['state' => 'current_state',
+        'ack' => 'problem_has_been_acknowledged',
+        'max_attempts' => 'max_attempts',
+        'service_name' => 'service_name',
+        'host_name' => 'name'];
 } else {
     list($state, $api_cols, $errors, $curl_stats) = NagdashHelpers::get_nagios_host_data($nagios_hosts,
         $unwanted_hosts, $api_type);

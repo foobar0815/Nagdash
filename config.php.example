@@ -48,6 +48,6 @@ $enable_blinking = false;
 $extra_css = none;
 
 # For testing, uncomment this for some errors:
-//$mock_state_file = './test_data/state';
+//$mock_state_file = '../test_data/state';
 
 // End Config
