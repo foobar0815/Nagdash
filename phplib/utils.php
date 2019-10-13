@@ -122,6 +122,14 @@ class NagdashHelpers {
         }
     }
 
+    static function cmp_state_and_last_state_change($a,$b) {
+        if ($a['service_state'] == $b['service_state']) {
+            if ($a['last_state_change'] == $b['last_state_change']) return 0;
+            return ($a['last_state_change'] > $b['last_state_change']) ? -1 : 1;
+        }
+        return ($a['service_state'] > $b['service_state']) ? -1 : 1;
+    }
+
     /**
      * get the correct state data based on the api type
      *
@@ -187,6 +195,7 @@ class NagdashHelpers {
                 } else {
                     foreach ($host_state as $this_host => $null) {
                         $host_state[$this_host]['tag'] = $host['tag'];
+                        $host_state[$this_host]['customer'] = $host['customer'];
                     }
                     $state += (array) $host_state;
                 }
@@ -260,6 +269,11 @@ class NagdashHelpers {
                 // Now parse the statuses for this host.
                 foreach ($host_detail['services'] as $service_name => $service_detail) {
 
+                    if(!isset($known_services[$host_detail['customer']])){
+                        $known_services[$host_detail['customer']] = array();
+                        $broken_services[$host_detail['customer']] = array();
+                    }
+
                     // If the host is OK, AND the service is NOT OK.
 
                     if ($service_detail[$api_cols['state']] != 0 && $host_detail[$api_cols['state']] == 0) {
@@ -284,7 +298,7 @@ class NagdashHelpers {
                             }
                         }
                         if ($service_detail['last_state_change'] >= $state_change_backstop) {
-                            array_push($$array_name, array(
+                            array_push($$array_name[$host_detail['customer']], array(
                                 "hostname" => $hostname,
                                 "service_name" => $service_name,
                                 "service_state" => $service_detail[$api_cols['state']],
