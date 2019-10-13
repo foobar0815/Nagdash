@@ -51,7 +51,7 @@ class NagdashHelpers {
                     "details" => $errmsg ];
         } else {
             $ret["curl_stats"] = ["$hostname:$port" => curl_getinfo($ch)];
-            $ret["details"] = json_decode($json, true);
+            $ret["details"] = json_decode(utf8_encode($json), true);
         }
 
         curl_close($ch);
