@@ -269,9 +269,9 @@ class NagdashHelpers {
                 // Now parse the statuses for this host.
                 foreach ($host_detail['services'] as $service_name => $service_detail) {
 
-                    if(!isset($known_services[$host_detail['customer']])){
-                        $known_services[$host_detail['customer']] = array();
-                        $broken_services[$host_detail['customer']] = array();
+                    if(!isset($broken_services[$host_detail['customer']])){
+                        $broken_services[$host_detail['customer']]['services'] = array();
+                        $broken_services[$host_detail['customer']]['tag'] = $host_detail['tag'];
                     }
 
                     // If the host is OK, AND the service is NOT OK.
@@ -283,9 +283,9 @@ class NagdashHelpers {
                             || ($service_detail['notifications_enabled'] == 0 )
                             || ((isset($host_detail['scheduled_downtime_depth']) && $host_detail['scheduled_downtime_depth'] > 0))
                         ) {
-                            $array_name = "known_services";
+                            $type = "known";
                         } else {
-                            $array_name = "broken_services";
+                            $type = "broken";
                         }
                         $downtime_remaining = null;
                         $downtimes = array_merge($service_detail['downtimes'], $host_detail['downtimes']);
@@ -298,7 +298,7 @@ class NagdashHelpers {
                             }
                         }
                         if ($service_detail['last_state_change'] >= $state_change_backstop) {
-                            array_push($$array_name[$host_detail['customer']], array(
+                            $service = array(
                                 "hostname" => $hostname,
                                 "service_name" => $service_name,
                                 "service_state" => $service_detail[$api_cols['state']],
@@ -313,7 +313,12 @@ class NagdashHelpers {
                                 "downtime_remaining" => $downtime_remaining,
                                 "is_ack" => ($service_detail[$api_cols['ack']] > 0) ? true : false,
                                 "is_enabled" => ($service_detail['notifications_enabled'] > 0) ? true : false,
-                            ));
+                            );
+                            if ($type == "known") {
+                                array_push($known_services, $service);
+                            } else if ($type == "broken") {
+                                array_push($broken_services[$host_detail['customer']]['services'], $service);
+                            }
                         }
                     }
                     if ($host_detail[$api_cols['state']] == 0) {

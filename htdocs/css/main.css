@@ -62,5 +62,5 @@ table#broken_hosts    tr:hover td span.controls { display:inline-block; }
 }
 
 table+table {
-    margin-top: 20px
+    margin-top: 10px
 }

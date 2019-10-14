@@ -87,7 +87,7 @@ if (count($errors) > 0) {
         echo "<div class='status_red'>{$error}</div>";
     }
 }
-list($host_summary, $service_summary, $down_hosts, $known_hosts, $known_services_per_customer, $broken_services_per_customer) = NagdashHelpers::parse_nagios_host_data($state, $filter, $api_cols, $filter_select_last_state_change);
+list($host_summary, $service_summary, $down_hosts, $known_hosts, $known_services, $broken_services_per_customer) = NagdashHelpers::parse_nagios_host_data($state, $filter, $api_cols, $filter_select_last_state_change);
 ?>
 
 <div id="info-window"><button class="close" onClick='$("#info-window").fadeOut("fast");'>&times;</button><div id="info-window-text"></div></div>
@@ -146,19 +146,20 @@ if (count($known_hosts) > 0) {
     </div>
 <?php 
     foreach($broken_services_per_customer as $customer => $customer_broken_services) {
-        if (count($customer_broken_services) > 0) {
+        if (count($customer_broken_services['services']) > 0) {
+            $tag = NagdashHelpers::print_tag($customer_broken_services['tag'], count($nagios_hosts));
 ?>
     <table class="widetable broken_services">
-    <tr><th colspan="4" class="customer"><?php echo $customer; ?></th></tr>
+    <tr><th colspan="4" class="customer"><?php echo $customer . " " . $tag; ?></th></tr>
     <tr><th width="30%">Hostname</th><th width="50%">Service</th><th width="10%">Duration</th><th width="5%">Attempt</th></tr>
 <?php
     // Check for the presence of the 'sort_by_time' cookie, then the static config value.
     if ((isset($filter_sort_by_time) && $filter_sort_by_time == 1) || $sort_by_time) {
-        usort($customer_broken_services,'NagdashHelpers::cmp_last_state_change');
+        usort($customer_broken_services['services'],'NagdashHelpers::cmp_last_state_change');
     } else {
-        usort($customer_broken_services, 'NagdashHelpers::cmp_state_and_last_state_change');
+        usort($customer_broken_services['services'], 'NagdashHelpers::cmp_state_and_last_state_change');
     }
-    foreach($customer_broken_services as $service) {
+    foreach($customer_broken_services['services'] as $service) {
         $soft_style = ($service['is_hard']) ? "" : "status_soft";
         $blink_tag = ($service['is_hard'] && $enable_blinking) ? "<blink>" : "";
         $tag = NagdashHelpers::print_tag($service['tag'], count($nagios_hosts));
@@ -176,23 +177,24 @@ if (count($known_hosts) > 0) {
 ?>
     </table>
 <?php } else { ?>
-    <table class="widetable status_green"><tr><td><b>All services OK</b></td></tr></table>
-<?php }
+    <table class="widetable status_green">
+        <tr><th class="customer"><?php echo $customer; ?></th></tr>
+        <tr><td><b>All services OK</b></td></tr>
+    </table>
+<?php }}
 
 // Check for the presence of the 'sort_by_time' cookie, then the static config value.
 if ((isset($filter_sort_by_time) && $filter_sort_by_time == 1) || $sort_by_time) {
-    usort($known_services_per_customer[$customer],'NagdashHelpers::cmp_last_state_change');
-} else {
-    usort($customer_broken_services, 'NagdashHelpers::cmp_state_and_last_state_change');
-}
+    usort($known_services,'NagdashHelpers::cmp_last_state_change');
+} 
 
-if (count($known_services_per_customer[$customer]) > 0) { ?>
+if (count($known_services) > 0) { ?>
     <h4>Known Service Problems</h4>
     <table class="widetable known_service">
     <tr><th width="30%">Hostname</th><th width="37%">Service</th><th width="18%">State</th><th width="10%">Duration</th><th width="5%">Attempt</th></tr>
 <?php
 
-    foreach($known_services_per_customer[$customer] as $service) {
+    foreach($known_services as $service) {
         if ($service['is_ack']) $status_text = "ack";
         if ($service['is_downtime']) $status_text = "downtime {$service['downtime_remaining']}";
         if (!$service['is_enabled']) $status_text = "disabled";
@@ -208,7 +210,7 @@ if (count($known_services_per_customer[$customer]) > 0) { ?>
 ?>
 
     </table>
-<?php }} ?>
+<?php } ?>
 
     </div>
 </div>
